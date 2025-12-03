@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>３６０°ＢＯＡＲＤ</title>
+  <link rel="stylesheet" href="css/index.css" />
+</head>
+
+<body class="index-page">
+
+  <div class="container">
+
+    <!-- タイトル -->
+    <h1 class="page-title">３６０°ＢＯＡＲＤ</h1>
+    <p class="sub">みんなの声がひとつの問いから広がるワークショップツール</p>
+
+    <!-- メインボタン -->
+    <div class="index-buttons">
+      <button class="btn btn-main" id="toggleHostFormBtn">
+        🎤 新しいボードを作成（ホスト）
+      </button>
+
+      <button class="btn btn-secondary" onclick="openExistingBoard()">
+        🔎 持っているIDでボードを開く
+      </button>
+    </div>
+
+    <!-- ▼ ホストフォーム（折りたたみ表示） -->
+    <div id="hostSection" class="host-section" style="display:none;">
+
+      <h2 class="host-subtitle">ホスト：ボードを作る</h2>
+
+      <!-- セッションID -->
+      <div class="field-wrapper">
+        <span class="field-label">セッションID</span>
+        <input id="sessionId" type="text" class="input" />
+      </div>
+
+      <!-- タイトル -->
+      <div class="field-wrapper">
+        <span class="field-label">タイトル</span>
+        <input id="title" type="text" class="input" placeholder="例）次世代リーダー研修 DAY2" />
+      </div>
+
+      <!-- 問い（テーマ） / 右下に作成ボタン -->
+      <div class="field-wrapper question-wrapper">
+        <span class="field-label">問い（テーマ）</span>
+        <textarea id="question" class="textarea" placeholder="例）今日の最大の学びは？"></textarea>
+
+        <!-- ✔ 作成ボタンを mini-action-btn に統一 -->
+        <button class="mini-action-btn create-position" id="createSessionBtn">
+          作成
+        </button>
+      </div>
+
+      <!-- ▼ URL 出力（左右2つのカード） -->
+      <div id="resultBox" class="result-box" style="display:none;">
+        <div class="url-grid">
+          <!-- 左：回答用 -->
+          <div class="url-box">
+            <div class="url-title">
+              <span>回答用 URL（参加者）</span>
+              <button class="copy-btn" id="copyAnswerUrlBtn">URLコピー</button>
+            </div>
+            <code id="answerUrl"></code>
+          </div>
+
+          <!-- 右：表示用 -->
+          <div class="url-box">
+            <div class="url-title">
+              <span>表示用 URL（全員）</span>
+              <button class="copy-btn" id="copyViewUrlBtn">URLコピー</button>
+            </div>
+            <code id="viewUrl"></code>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Firebase & Logic -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-analytics.js";
+    import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: XXXXXXXXXXXXX,
+      authDomain: XXXXXXXXXXXXX,
+      databaseURL: XXXXXXXXXXXXX,
+      projectId: XXXXXXXXXXXXX,
+      storageBucket: XXXXXXXXXXXXX,
+      messagingSenderId: XXXXXXXXXXXXX,
+      appId: XXXXXXXXXXXXX,
+      measurementId: XXXXXXXXXXXXX,
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    const db = getDatabase(app);
+
+    const hostSection = document.getElementById("hostSection");
+    const toggleHostFormBtn = document.getElementById("toggleHostFormBtn");
+    const sessionIdInput = document.getElementById("sessionId");
+    const createSessionBtn = document.getElementById("createSessionBtn");
+    const resultBox = document.getElementById("resultBox");
+    const answerUrlElem = document.getElementById("answerUrl");
+    const viewUrlElem = document.getElementById("viewUrl");
+
+    // ホストフォームの開閉
+    toggleHostFormBtn.addEventListener("click", () => {
+      hostSection.style.display =
+        hostSection.style.display === "none" ? "block" : "none";
+    });
+
+    // セッションID自動生成
+    function generateId() {
+      const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+      return [...Array(6)]
+        .map(() => chars[Math.floor(Math.random() * chars.length)])
+        .join("");
+    }
+    sessionIdInput.value = generateId();
+
+    // 既存ボードを開く
+    window.openExistingBoard = function () {
+      const id = prompt("開きたいセッションIDを入力してください：");
+      if (id) window.location.href = `answer.html?s=${id.trim()}`;
+    };
+
+    // ボード作成（問い欄右下のボタン）
+    createSessionBtn.addEventListener("click", async () => {
+      const id = sessionIdInput.value.trim();
+      const title = document.getElementById("title").value.trim();
+      const question = document.getElementById("question").value.trim();
+
+      if (!id || !title || !question) {
+        alert("セッションID・タイトル・問いをすべて入力してください。");
+        return;
+      }
+
+      await set(ref(db, `sessions/${id}`), {
+        title,
+        question,
+        createdAt: Date.now(),
+      });
+
+      const base = window.location.origin + window.location.pathname.replace("index.html", "");
+      answerUrlElem.textContent = `${base}answer.html?s=${id}`;
+      viewUrlElem.textContent = `${base}answer.html?s=${id}#board`;
+      resultBox.style.display = "block";
+    });
+
+    // コピーアイコン（回答用）
+    document.getElementById("copyAnswerUrlBtn")
+      .addEventListener("click", () => {
+        const text = answerUrlElem.textContent.trim();
+        if (!text) return;
+        navigator.clipboard.writeText(text);
+        alert("回答用URLをコピーしました！");
+      });
+
+    // コピーアイコン（表示用）
+    document.getElementById("copyViewUrlBtn")
+      .addEventListener("click", () => {
+        const text = viewUrlElem.textContent.trim();
+        if (!text) return;
+        navigator.clipboard.writeText(text);
+        alert("表示用URLをコピーしました！");
+      });
+  </script>
+
+</body>
+
+</html>

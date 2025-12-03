@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>３６０°ＢＯＡＲＤ</title>
+
+  <!-- 外部CSS -->
+  <link rel="stylesheet" href="css/answer.css" />
+
+  <!-- スクショライブラリ -->
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+</head>
+
+<body>
+  <div class="container">
+
+    <!-- タイトル -->
+    <h1 class="page-title">３６０°ＢＯＡＲＤ</h1>
+    <p class="sub" id="sessionInfo">セッションを読み込み中...</p>
+
+    <!-- ===========================
+         上：質問 ＋ 回答入力欄
+    ============================ -->
+    <div class="cacao-card">
+
+      <!-- 中央に質問ピル -->
+      <div id="questionBox" class="question-pill">読み込み中...</div>
+
+      <!-- コンパクト入力エリア -->
+      <div class="answer-area">
+
+        <!-- 差出人（インセットラベル） -->
+        <div class="field-wrapper">
+          <span class="field-label">差出人</span>
+          <input id="uname" type="text" class="name-input" placeholder="例）ひろ" />
+        </div>
+
+        <!-- メッセージ（右下に送信ボタンを重ねる） -->
+        <div class="field-wrapper message-wrapper">
+          <span class="field-label">メッセージ</span>
+          <textarea id="answer" class="message-textarea" placeholder="ここに答えを書いてください"></textarea>
+
+          <!-- 送信ボタン -->
+          <button id="sendBtn">📮 送信</button>
+        </div>
+
+        <p id="statusMsg"></p>
+      </div>
+    </div>
+
+    <!-- ===========================
+         ボードへのつなぎ帯
+    ============================ -->
+    <div class="board-connector">
+      <div class="board-connector-line"></div>
+      ▼ この下に、みんなの多様な視点で、360°ボードが広がります
+    </div>
+
+    <!-- ===========================
+         板チョコボード
+    ============================ -->
+    <div id="board" class="board-wrapper">
+
+      <!-- ★ スクショ対象：質問＋回答だけ -->
+      <div id="boardCapture">
+
+        <!-- 質問チョコ -->
+        <div class="choco-question">
+          <div class="choco-question-label">『ホストからの質問』</div>
+          <div id="questionText" class="choco-question-text">...</div>
+        </div>
+
+        <!-- 回答チョコグリッド -->
+        <div class="choco-grid" id="answersGrid"></div>
+
+      </div>
+
+      <!-- 共有ボタン -->
+      <div class="export-wrapper">
+        <div class="export-btn-row">
+          <button class="btn-share" id="copyTextBtn">📋 テキストをコピー</button>
+          <button class="btn-share" id="saveImageBtn">📸 スクショ保存</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ===========================
+       Firebase + ロジック
+  ============================ -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-analytics.js";
+    import {
+      getDatabase,
+      ref,
+      onValue,
+      push,
+      set,
+      onChildAdded
+    } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyA-pyrt95wDhrO1j0jo4rEAzUY2nQ-C2xw",
+      authDomain: "board-3d202.firebaseapp.com",
+      databaseURL: "https://board-3d202-default-rtdb.firebaseio.com",
+      projectId: "board-3d202",
+      storageBucket: "board-3d202.firebasestorage.app",
+      messagingSenderId: "711334753846",
+      appId: "1:711334753846:web:0857b4302a722cfd408a97",
+      measurementId: "G-YDWKVS4SGP"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    const db = getDatabase(app);
+
+    const sessionId = new URLSearchParams(location.search).get("s");
+
+    const sessionInfo = document.getElementById("sessionInfo");
+    const questionBox = document.getElementById("questionBox");
+    const questionText = document.getElementById("questionText");
+    const sendBtn = document.getElementById("sendBtn");
+    const answersGrid = document.getElementById("answersGrid");
+    const statusMsg = document.getElementById("statusMsg");
+    const copyTextBtn = document.getElementById("copyTextBtn");
+    const saveImageBtn = document.getElementById("saveImageBtn");
+
+    let currentQuestion = "";
+    const answers = [];
+
+    // セッションIDチェック
+    if (!sessionId) {
+      sessionInfo.textContent = "セッションIDがありません。";
+      disableActions();
+    } else {
+      sessionInfo.textContent = `セッションID：${sessionId}`;
+
+      // 質問読み込み
+      const sessionRef = ref(db, `sessions/${sessionId}`);
+      onValue(sessionRef, (snapshot) => {
+        const data = snapshot.val();
+        if (!data) {
+          questionBox.textContent = "セッションが見つかりません。";
+          questionText.textContent = "セッションが見つかりません。";
+          disableActions();
+        } else {
+          currentQuestion = data.question;
+          questionBox.textContent = currentQuestion;
+          questionText.textContent = currentQuestion;
+        }
+      });
+
+      // 回答をリアルタイム受信
+      const answersRef = ref(db, `sessions/${sessionId}/answers`);
+      onChildAdded(answersRef, (snapshot) => {
+        answers.push(snapshot.val());
+        renderCards();
+      });
+    }
+
+    function disableActions() {
+      sendBtn.disabled = true;
+      copyTextBtn.disabled = true;
+      saveImageBtn.disabled = true;
+    }
+
+    // 回答送信
+    sendBtn.addEventListener("click", async () => {
+      const name = document.getElementById("uname").value.trim();
+      const text = document.getElementById("answer").value.trim();
+
+      if (!name || !text) {
+        alert("差出人とメッセージを入力してください。");
+        return;
+      }
+      if (!sessionId) return;
+
+      const data = { name, text, createdAt: Date.now() };
+      await set(push(ref(db, `sessions/${sessionId}/answers`)), data);
+
+      statusMsg.textContent = "下記のボードに送信！いろんな視点から見てみよう";
+      document.getElementById("answer").value = "";
+      setTimeout(() => (statusMsg.textContent = ""), 2000);
+    });
+
+    // 板チョコカード描画
+    function renderCards() {
+      answersGrid.innerHTML = "";
+      answers.forEach((ans) => {
+        const div = document.createElement("div");
+        div.className = "choco-card";
+        div.innerHTML = `
+          <div class="choco-card-text">${escapeHtml(ans.text)}</div>
+          <div class="choco-card-from">From ${escapeHtml(ans.name)}</div>
+        `;
+        answersGrid.appendChild(div);
+      });
+    }
+
+    // テキストコピー
+    copyTextBtn.addEventListener("click", async () => {
+      if (!currentQuestion && answers.length === 0) {
+        alert("コピーできる内容がまだありません。");
+        return;
+      }
+      const lines = [`ホストからの質問: ${currentQuestion}`];
+      answers.forEach((ans, i) =>
+        lines.push(`- 回答者${i + 1}（${ans.name}）: ${ans.text}`)
+      );
+      try {
+        await navigator.clipboard.writeText(lines.join("\n"));
+        alert("テキストをコピーしました！");
+      } catch {
+        alert("コピーに失敗しました。");
+      }
+    });
+
+    // スクショ保存（質問＋回答のみ）
+    saveImageBtn.addEventListener("click", () => {
+      const target = document.getElementById("boardCapture");
+      html2canvas(target)
+        .then((canvas) => {
+          const a = document.createElement("a");
+          a.href = canvas.toDataURL("image/png");
+          a.download = `360board_${sessionId}.png`;
+          a.click();
+        })
+        .catch(() => {
+          alert("スクリーンショット作成に失敗しました。");
+        });
+    });
+
+    // HTMLエスケープ
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, (c) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      }[c]));
+    }
+  </script>
+
+</body>
+
+</html>

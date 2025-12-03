@@ -1,0 +1,273 @@
+/* ===============================
+   全体スタイル
+=============================== */
+body.index-page {
+  margin: 0;
+  padding: 0;
+  font-family: "Helvetica", "Arial", sans-serif;
+  background: #f7ecdd;
+  /* カカオクリーム背景 */
+  color: #3b2a20;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* コンテナ */
+.container {
+  max-width: 760px;
+  width: 100%;
+  padding: 26px 16px;
+}
+
+/* タイトルエリア（楕円形の枠） */
+.page-title,
+.sub {
+  background:
+    repeating-linear-gradient(-45deg,
+      #fdf6ec,
+      #fdf6ec 10px,
+      #f9f0e0 10px,
+      #f9f0e0 20px);
+  box-shadow: inset 0 0 0 1px #ffe3bc, 0 6px 18px rgba(0, 0, 0, 0.15);
+}
+
+.page-title {
+  font-size: 26px;
+  text-align: center;
+  letter-spacing: 0.14em;
+  color: #5b3420;
+  margin: 0 0 0;
+  padding: 16px 20px 12px;
+  border-radius: 25px 25px 0 0;
+  border-bottom: none;
+}
+
+.sub {
+  text-align: center;
+  font-size: 13px;
+  color: #7a6454;
+  margin: 0 0 16px;
+  padding: 8px 20px 14px;
+  border-radius: 0 0 25px 25px;
+}
+
+/* ===============================
+   汎用ボタン
+=============================== */
+.btn {
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 13px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  color: #fff;
+  transition: 0.2s;
+}
+
+.btn-main {
+  background: #e35b86;
+  box-shadow: 0 4px 12px rgba(227, 91, 134, 0.4);
+}
+
+.btn-secondary {
+  background: #c46b3c;
+  box-shadow: 0 4px 12px rgba(135, 63, 25, 0.4);
+}
+
+.btn:hover {
+  opacity: 0.88;
+  transform: translateY(1px);
+}
+
+/* メインボタン配置 */
+.index-buttons {
+  text-align: center;
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.index-buttons .btn {
+  flex: 1;
+  min-width: 200px;
+}
+
+/* ===============================
+   ホストエリア（折りたたみカード）
+=============================== */
+.host-section {
+  background: #fdf6ec;
+  border-radius: 18px;
+  padding: 16px 18px;
+  border: 1px solid #ebd5b8;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+}
+
+.host-subtitle {
+  margin: 0 0 12px;
+  font-size: 15px;
+  color: #5b3420;
+}
+
+/* ===============================
+   インセットラベル付き入力欄
+=============================== */
+.field-wrapper {
+  position: relative;
+  margin-bottom: 12px;
+}
+
+.field-label {
+  position: absolute;
+  top: 6px;
+  left: 10px;
+  padding: 0 6px;
+  background: #fffdf9;
+  font-size: 11px;
+  color: #a07a5f;
+  pointer-events: none;
+}
+
+/* 共通 input / textarea */
+.input,
+.textarea {
+  width: 100%;
+  border-radius: 12px;
+  border: 2px solid #ddd0c2;
+  background: #fffdf9;
+  padding: 20px 10px 8px;
+  /* 上にラベル分の余白 */
+  font-family: inherit;
+  font-size: 13px;
+  box-sizing: border-box;
+}
+
+.textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+
+.input:focus,
+.textarea:focus {
+  border-color: #d89b54;
+  outline: none;
+}
+
+/* ===============================
+   作成ボタン（問いの右下に配置）
+=============================== */
+.question-wrapper {
+  position: relative;
+}
+
+.question-wrapper .textarea {
+  padding-bottom: 36px;
+  /* 右下作成ボタン用の余白 */
+}
+
+/* 作成 / URLコピー 共通ミニボタン */
+.mini-action-btn {
+  position: absolute;
+  right: 12px;
+  bottom: 10px;
+
+  min-width: 90px;
+  padding: 6px 0;
+
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: bold;
+  text-align: center;
+  color: #fff;
+  background: #e35b86;
+  /* 統一カラー */
+  box-shadow: 0 3px 8px rgba(227, 91, 134, 0.5);
+  transition: 0.2s;
+}
+
+.mini-action-btn:hover {
+  opacity: 0.9;
+  transform: translateY(1px);
+}
+
+/* ===============================
+   URL出力（結果表示）
+=============================== */
+.result-box {
+  margin-top: 18px;
+}
+
+.url-grid {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.url-box {
+  flex: 1;
+  min-width: 240px;
+  background: #fffdf9;
+  border-radius: 12px;
+  padding: 12px;
+  border: 1px solid #ead7c0;
+  font-size: 12px;
+  color: #5b3420;
+}
+
+/* タイトル行（右側にコピー） */
+.url-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+/* URLコピー専用ボタン（作成と同じ大きさ） */
+.copy-btn {
+  min-width: 90px;
+  padding: 6px 0;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: bold;
+  background: #e35b86;
+  color: #fff;
+  box-shadow: 0 3px 8px rgba(227, 91, 134, 0.5);
+  transition: 0.2s;
+}
+
+.copy-btn:hover {
+  opacity: 0.9;
+  transform: translateY(1px);
+}
+
+/* URL 表示枠 */
+code {
+  display: block;
+  background: #fdfbf6;
+  border-radius: 6px;
+  padding: 6px 6px;
+  font-size: 11px;
+  word-break: break-all;
+  border: 1px solid #eee0c9;
+  margin-bottom: 6px;
+}
+
+@media (max-width: 600px) {
+  .host-section {
+    padding: 12px 10px;
+  }
+
+  .page-title {
+    font-size: 22px;
+  }
+}
