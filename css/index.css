@@ -230,6 +230,32 @@ body.index-page {
   margin-bottom: 4px;
 }
 
+/* ボタングループ（URLクリックとURLコピーを横並び） */
+.button-group {
+  display: flex;
+  gap: 8px;
+}
+
+/* URLリンクボタン（左側） */
+.link-btn {
+  min-width: 90px;
+  padding: 6px 0;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: bold;
+  background: #c46b3c;
+  color: #fff;
+  box-shadow: 0 3px 8px rgba(196, 107, 60, 0.5);
+  transition: 0.2s;
+}
+
+.link-btn:hover {
+  opacity: 0.9;
+  transform: translateY(1px);
+}
+
 /* URLコピー専用ボタン（作成と同じ大きさ） */
 .copy-btn {
   min-width: 90px;
